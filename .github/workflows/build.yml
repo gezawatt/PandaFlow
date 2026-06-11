@@ -23,19 +23,15 @@ jobs:
       - name: Cross-compilar faad2 (AAC)
         run: ./scripts/build-faad2.sh
 
-      - name: Descargar makerom y bannertool
-        run: ./scripts/fetch-tools.sh
+      - name: Compilar .3dsx
+        run: make
 
-      - name: Compilar .3dsx y .cia
-        run: |
-          make
-          make cia
-
-      - name: Subir artefactos
+      - name: Subir artefacto (.3dsx)
         uses: actions/upload-artifact@v4
         with:
-          name: PandaFlow
-          path: |
-            pandaflow.3dsx
-            pandaflow.cia
+          name: PandaFlow-3dsx
+          path: pandaflow.3dsx
           if-no-files-found: error
+
+      # Nota: el .cia se genera en local con 'make cia' (scripts/fetch-tools.sh);
+      # el bannertool precompilado requiere una glibc mas nueva que la del contenedor.
