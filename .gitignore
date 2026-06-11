@@ -1,0 +1,18 @@
+# Artefactos de compilación
+build/
+*.elf
+*.3dsx
+*.cia
+*.smdh
+*.bnr
+*.map
+
+# Dependencias que se reconstruyen con scripts/build-faad2.sh
+lib/
+
+# Herramientas que se descargan con scripts/fetch-tools.sh
+tools/
+
+# Basura del SO
+.DS_Store
+Thumbs.db
