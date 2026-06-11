@@ -33,6 +33,7 @@
 #define C_OFF     C2D_Color32(0x40,0x38,0x52,0xFF)
 #define C_HDR     C2D_Color32(0x0C,0x09,0x12,0xFF)
 #define C_ALBROW  C2D_Color32(0x2C,0x1F,0x44,0xFF)
+#define C_PANEL   C2D_Color32(0x14,0x0E,0x20,0xC8)   // inserto J-card translucido (legibilidad sobre el degradado)
 
 typedef enum { REPEAT_OFF=0, REPEAT_ALL, REPEAT_ONE } RepeatMode;
 
@@ -61,6 +62,12 @@ static void txtCtr(float cx,float y,float z,float s,u32 c,const char* str){
     C2D_Text t; C2D_TextParse(&t,g_text,str); C2D_TextOptimize(&t);
     float w,h; C2D_TextGetDimensions(&t,s,s,&w,&h);
     C2D_DrawText(&t,C2D_WithColor,cx-w/2,y,z,s,s,c);
+}
+// texto con sombra de tinta: legible sobre el degradado+scanlines de la pantalla superior
+static void txtSh(float x,float y,float z,float s,u32 c,const char* str){
+    C2D_Text t; C2D_TextParse(&t,g_text,str); C2D_TextOptimize(&t);
+    C2D_DrawText(&t,C2D_WithColor,x+1,y+1,z,s,s,C_INK);
+    C2D_DrawText(&t,C2D_WithColor,x,  y,  z,s,s,c);
 }
 static void clip(char* d,size_t n,const char* s,size_t mx){
     size_t l=strlen(s);
@@ -144,7 +151,10 @@ static int manualPrev(int cur,int found,bool sh){
 static void renderTop(int playing,AudioState st,uint64_t cur,uint64_t total,uint32_t rate){
     C2D_DrawRectangle(0,0,0.0f,TOP_W,SCR_H/2,C_SKY_TOP,C_SKY_TOP,C_SKY_MID,C_SKY_MID);
     C2D_DrawRectangle(0,SCR_H/2,0.0f,TOP_W,SCR_H/2,C_SKY_MID,C_SKY_MID,C_SKY_BOT,C_SKY_BOT);
-    txt(12,6,0.8f,0.6f,C_CYAN,"P A N D A F L O W");
+    // banda-etiqueta tipo cassette para el encabezado (el titulo no peleaba con el degradado+scanlines)
+    C2D_DrawRectSolid(0,0,0.15f,TOP_W,23,C_HDR);
+    C2D_DrawRectSolid(0,23,0.16f,TOP_W,2,C_PINK);
+    txtSh(12,6,0.8f,0.6f,C_CYAN,"P A N D A F L O W");
     txtRight(TOP_W-10,9,0.8f,0.42f,C_CREAM,"// mixtape");
 
     float cvX=16,cvY=42,cvS=110;
@@ -153,6 +163,9 @@ static void renderTop(int playing,AudioState st,uint64_t cur,uint64_t total,uint
     else drawVinyl(cvX+cvS/2, cvY+cvS/2, cvS/2-2, g_reelAng);   // vinilo girando
 
     float ix=140; char tmp[256];
+    // inserto tipo J-card detras de la info: el texto neon ahora descansa sobre fondo solido, no sobre el degradado
+    C2D_DrawRectSolid(ix-6,40,0.18f,TOP_W-6-(ix-6),152,C_PANEL);
+    C2D_DrawRectSolid(ix-6,40,0.19f,2,152,C_CYAN);
     const Track* t=(playing>=0)?playlistGet(playing):NULL;
     if(t){
         clip(tmp,sizeof tmp,t->title[0]?t->title:t->file,26); txt(ix,44,0.3f,0.56f,C_CREAM,tmp);
@@ -172,9 +185,11 @@ static void renderTop(int playing,AudioState st,uint64_t cur,uint64_t total,uint
     else if(st==AUDIO_PAUSED){ icoPause(ix+5,178,5,C_YELLOW); txt(ix+16,172,0.3f,0.46f,C_YELLOW,"PAUSA"); }
     else { icoStop(ix+5,178,4,C_DIM); txt(ix+16,172,0.3f,0.46f,C_DIM,"STOP"); }
     if(audioKeepingAwake()) txt(ix+90,174,0.3f,0.4f,C_CYAN,"tapa: sigue sonando");
-    if(lyricsAvailable()) txt(16,162,0.3f,0.4f,C_PINK,"SEL: letras");
-    txt(16,200,0.3f,0.4f,C_DIM2,"A play  Y pausa  X stop");
-    txt(16,216,0.3f,0.4f,C_DIM2,"B atras   C-stick vol");
+    if(lyricsAvailable()) txtSh(16,162,0.3f,0.4f,C_PINK,"SEL: letras");
+    // tira-etiqueta para la ayuda: en C_DIM2 sobre el rojo del degradado no se leia
+    C2D_DrawRectSolid(10,198,0.28f,182,34,C_PANEL);
+    txt(16,200,0.3f,0.4f,C_CREAM,"A play  Y pausa  X stop");
+    txt(16,216,0.3f,0.4f,C_CREAM,"B atras   C-stick vol");
 
     // indicador de volumen (esquina inf. derecha)
     char vbuf[16]; int vol=audioGetVolume();

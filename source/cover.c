@@ -49,11 +49,12 @@ bool coverLoad(const char* path) {
     if (!C3D_TexInit(&s_tex, S, S, GPU_RGBA8)) { linearFree(lin); return false; }
     C3D_TexSetFilter(&s_tex, GPU_LINEAR, GPU_LINEAR);
 
-    // linear -> tiled (con flip vertical para que quede derecha)
+    // linear -> tiled. La orientacion correcta ya la da la subtextura (top=1/bottom=0);
+    // NO aplicar FLIP_VERT aqui o la caratula sale dada vuelta (doble flip).
     C3D_SyncDisplayTransfer(
         lin, GX_BUFFER_DIM(S, S),
         (u32*)s_tex.data, GX_BUFFER_DIM(S, S),
-        (GX_TRANSFER_FLIP_VERT(1) | GX_TRANSFER_OUT_TILED(1) | GX_TRANSFER_RAW_COPY(0) |
+        (GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(1) | GX_TRANSFER_RAW_COPY(0) |
          GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) |
          GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGBA8) |
          GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO)));
