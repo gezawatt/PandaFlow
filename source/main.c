@@ -174,7 +174,19 @@ static void renderTop(int playing,AudioState st,uint64_t cur,uint64_t total,uint
     if(audioKeepingAwake()) txt(ix+90,174,0.3f,0.4f,C_CYAN,"tapa: sigue sonando");
     if(lyricsAvailable()) txt(16,162,0.3f,0.4f,C_PINK,"SEL: letras");
     txt(16,200,0.3f,0.4f,C_DIM2,"A play  Y pausa  X stop");
-    txt(16,216,0.3f,0.4f,C_DIM2,"L/R 10s  ZL/ZR pista  B atras");
+    txt(16,216,0.3f,0.4f,C_DIM2,"B atras   C-stick vol");
+
+    // indicador de volumen (esquina inf. derecha)
+    char vbuf[16]; int vol=audioGetVolume();
+    snprintf(vbuf,sizeof vbuf,"VOL %d%%",vol);
+    txtRight(TOP_W-10,196,0.3f,0.4f,C_CYAN,vbuf);
+    float vbW=86,vbX=TOP_W-10-vbW,vbY=214,vbH=6;
+    C2D_DrawRectSolid(vbX,vbY,0.3f,vbW,vbH,C_INK2);
+    float vf=(float)vol/(float)AUDIO_VOL_MAX; if(vf>1)vf=1;
+    u32 vc=(vol>100)?C_ORANGE:C_CYAN;   // naranjo cuando hay amplificacion
+    C2D_DrawRectSolid(vbX,vbY,0.31f,vbW*vf,vbH,vc);
+    if(vol>100){ float tx=vbX+vbW*(100.0f/AUDIO_VOL_MAX);
+        C2D_DrawRectSolid(tx,vbY-1,0.32f,1.0f,vbH+2,C_CREAM); }  // marca el 100%
     scanlines(TOP_W);
 }
 
@@ -298,8 +310,11 @@ int main(int argc,char** argv){
     C3D_RenderTarget* bot=C2D_CreateScreenTarget(GFX_BOTTOM,GFX_LEFT);
     g_text=C2D_TextBufNew(8192);
 
+    irrstInit();   // C-stick (New 3DS) para el volumen
+
     bool audioOk=audioInit();
     int found=playlistScan(MUSIC_DIR);
+    int volHold=0;   // anti-rebote/repeticion del C-stick para el volumen
 
     int playing=-1;
     int browseAlbum=-1;            // -1 = vista de albumes; >=0 = tracks de ese album
@@ -376,10 +391,14 @@ int main(int argc,char** argv){
 
         if(kDown&KEY_Y) audioTogglePause();
         if(kDown&KEY_X){ audioStop(); playing=-1; }
-        if(kDown&KEY_L) audioSeekSeconds(-10);
-        if(kDown&KEY_R) audioSeekSeconds(+10);
-        if((kDown&KEY_ZR)&&playing>=0){int nx=manualNext(playing,found,shuffle); if(nx>=0&&startTrack(nx))playing=nx;}
-        if((kDown&KEY_ZL)&&playing>=0){int pv=manualPrev(playing,found,shuffle); if(pv>=0&&startTrack(pv))playing=pv;}
+
+        // ---- volumen con el C-stick (New 3DS): arriba sube, abajo baja ----
+        irrstScanInput();
+        circlePosition cs; hidCstickRead(&cs);
+        if(cs.dy>40 || cs.dy<-40){
+            if(volHold<=0){ audioSetVolume(audioGetVolume()+(cs.dy>0?+5:-5)); volHold=3; }
+            else volHold--;
+        } else volHold=0;
         if(audioConsumeTrackEnded()){
             int nx=autoNext(playing,found,shuffle,repeat);
             if(nx>=0&&startTrack(nx))playing=nx; else playing=-1;
@@ -405,7 +424,7 @@ int main(int argc,char** argv){
         C3D_FrameEnd(0);
     }
 
-    audioExit(); coverClear();
+    audioExit(); coverClear(); irrstExit();
     C2D_TextBufDelete(g_text);
     C2D_Fini(); C3D_Fini(); gfxExit(); romfsExit();
     return 0;

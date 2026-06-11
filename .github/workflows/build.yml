@@ -3,8 +3,12 @@ name: build
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: write   # crear releases al empujar un tag
 
 jobs:
   build:
@@ -33,5 +37,11 @@ jobs:
           path: pandaflow.3dsx
           if-no-files-found: error
 
-      # Nota: el .cia se genera en local con 'make cia' (scripts/fetch-tools.sh);
-      # el bannertool precompilado requiere una glibc mas nueva que la del contenedor.
+      # Al empujar un tag v* se publica una Release con el .3dsx.
+      # Universal Updater jala el binario desde aqui.
+      - name: Publicar Release (.3dsx)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: pandaflow.3dsx
+          fail_on_unmatched_files: true

@@ -38,3 +38,10 @@ void audioSeekSeconds(int seconds);
 // Indica si en este momento se esta impidiendo la suspension (tapa cerrada
 // seguiria sonando). Util para mostrarlo en la UI.
 bool audioKeepingAwake(void);
+
+// Volumen de salida como porcentaje. 100 = sin ganancia (sonoridad nativa del
+// archivo). Por encima de 100 amplifica por software con limite duro (clamp)
+// para que la senal no se rompa. Se recorta a [0, AUDIO_VOL_MAX].
+#define AUDIO_VOL_MAX 200
+void audioSetVolume(int pct);
+int  audioGetVolume(void);

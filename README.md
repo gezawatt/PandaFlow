@@ -8,7 +8,7 @@ Reproductor de música homebrew para Nintendo 3DS/2DS que **sigue sonando con la
 tapa cerrada** (igual que la app oficial "Nintendo 3DS Sound").
 
 <!-- profile-excerpt -->
-**Reproductor de música homebrew para Nintendo 3DS** que **sigue sonando con la tapa cerrada** (como la app oficial de Sonido). Escrito en **C** con **devkitPro / libctru + citro2d**: audio por streaming **NDSP** desde un hilo dedicado, **MP3/FLAC/WAV** (dr_libs) y **AAC** (faad2 + minimp4), biblioteca recursiva por **álbumes** con **carátulas** (stb_image → textura GPU), **letras** `.lrc` sincronizadas / `.txt`, **shuffle/repeat** y controles táctiles. UI estilo *Mixtape* con disco de vinilo. Compila a `.3dsx` y `.cia`, con CI en GitHub Actions.
+**Reproductor de música homebrew para Nintendo 3DS** que **sigue sonando con la tapa cerrada** (como la app oficial de Sonido). Escrito en **C** con **devkitPro / libctru + citro2d**: audio por streaming **NDSP** desde un hilo dedicado, **MP3/FLAC/WAV** (dr_libs) y **AAC** (faad2 + minimp4), biblioteca recursiva por **álbumes** con **carátulas** (stb_image → textura GPU), **letras** `.lrc` sincronizadas / `.txt`, **shuffle/repeat** y controles táctiles. UI estilo *Mixtape* con disco de vinilo. Compila a `.3dsx` (Homebrew Launcher), con CI en GitHub Actions y distribución por **Universal Updater**.
 <!-- /profile-excerpt -->
 
 ## Característica clave: tapa cerrada
@@ -81,13 +81,36 @@ sdmc:/music/
 | A | Reproducir la canción seleccionada |
 | Y | Pausa / reanudar |
 | X | Detener |
-| L / R | Retroceder / adelantar 10 s |
-| ZL / ZR | Pista anterior / siguiente (New 3DS) |
 | A | Entrar al álbum / reproducir track |
 | B | Volver a la lista de álbumes |
 | SELECT | Mostrar / ocultar letras |
+| **C-stick ↑/↓** | **Subir / bajar volumen** (New 3DS) |
 | Barra táctil | ⏮ ▶/II ⏭ ■ SHUF RPT |
 | START | Salir |
+
+## Instalación
+
+PandaFlow se distribuye como **`.3dsx`** (homebrew para el Homebrew Launcher), no
+como `.cia`. Necesitas una consola con CFW (Luma3DS) y el Homebrew Launcher.
+
+### Universal Updater (recomendado)
+
+1. Abre **Universal Updater** en tu 3DS.
+2. Busca **PandaFlow** e instálalo.
+
+Universal Updater descarga el `.3dsx` desde las
+[Releases](https://github.com/PandaAkiraNakai/PandaFlow/releases) y lo deja en
+`sdmc:/3ds/PandaFlow/`. Luego ábrelo desde el **Homebrew Launcher**.
+
+### Manual
+
+1. Descarga `pandaflow.3dsx` de la última
+   [release](https://github.com/PandaAkiraNakai/PandaFlow/releases/latest).
+2. Cópialo a `sdmc:/3ds/` en la microSD.
+3. Ábrelo desde el **Homebrew Launcher**.
+
+> **Nota:** FBI no sirve para esto — instala `.cia` (títulos del menú HOME), no
+> `.3dsx`. Para homebrew `.3dsx` el camino es Universal Updater o la copia manual.
 
 ## Compilar
 
@@ -97,17 +120,14 @@ Requiere [devkitPro](https://devkitpro.org) con el grupo `3ds-dev`
 ```sh
 source /etc/profile.d/devkit-env.sh   # define DEVKITPRO / DEVKITARM
 
-# Dependencias que no se versionan (se reconstruyen/descargan):
+# Dependencia que no se versiona (se reconstruye):
 ./scripts/build-faad2.sh   # cross-compila faad2 -> lib/libfaad.a + include/neaacdec.h
-./scripts/fetch-tools.sh   # descarga makerom y bannertool -> tools/  (solo para 'make cia')
 
 make          # genera pandaflow.3dsx (Homebrew Launcher)
-make cia      # genera pandaflow.cia (instalable en el menú HOME)
 make clean
 ```
 
-El `.cia` usa `tools/bannertool` y `tools/makerom` (incluidos) + los assets de
-`meta/` (icono, banner, audio, `app.rsf`).
+El `.3dsx` embebe el icono de `meta/icon.png` (Homebrew Launcher).
 
 ## Estructura
 
@@ -123,9 +143,8 @@ source/
   dr_impl.c    implementaciones de dr_libs (TU única)
 include/       headers propios + dr_*.h, minimp4.h, neaacdec.h, stb_image.h
 lib/           libfaad.a (se genera con scripts/build-faad2.sh)
-meta/          icon.png, banner.png, banner.wav, app.rsf
-scripts/       build-faad2.sh, fetch-tools.sh
-tools/         bannertool, makerom (se bajan con scripts/fetch-tools.sh)
+meta/          icon.png (icono del .3dsx / Universal-DB)
+scripts/       build-faad2.sh
 ```
 
 ## Créditos y licencia

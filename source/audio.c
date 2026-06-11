@@ -25,8 +25,16 @@ static volatile bool s_awake     = false;   // estamos impidiendo suspension
 
 static LightEvent    s_wake;                 // despierta al hilo cuando hay trabajo
 
+static volatile int  s_volPct = 150;         // ganancia de salida (%) — 100 = nativo
+
 static inline int16_t* bufPtr(int i) {
     return s_buf + (size_t)i * FRAMES_PER_BUF * CHANNELS_OUT;
+}
+
+static inline int16_t clamp16(int v) {
+    if (v >  32767) return  32767;
+    if (v < -32768) return -32768;
+    return (int16_t)v;
 }
 
 // Activa/desactiva el bloqueo de suspension. Cuando esta en false la consola
@@ -42,6 +50,15 @@ static bool fillBuffer(int i) {
     int16_t* p = bufPtr(i);
     size_t got = decoderRead(&s_dec, p, FRAMES_PER_BUF);
     if (got == 0) return false;
+
+    // Ganancia por software con limite duro. Los altavoces del 3DS son flojos y
+    // a 100 (sonoridad nativa) muchos archivos se oyen bajos; >100 amplifica.
+    int vol = s_volPct;
+    if (vol != 100) {
+        size_t n = got * CHANNELS_OUT;
+        for (size_t k = 0; k < n; k++)
+            p[k] = clamp16((int)p[k] * vol / 100);
+    }
 
     // Si quedo corto (ultimo bloque), rellenar el resto con silencio.
     if (got < FRAMES_PER_BUF) {
@@ -226,3 +243,10 @@ void audioSeekSeconds(int seconds) {
 }
 
 bool audioKeepingAwake(void) { return s_awake; }
+
+void audioSetVolume(int pct) {
+    if (pct < 0)             pct = 0;
+    if (pct > AUDIO_VOL_MAX)  pct = AUDIO_VOL_MAX;
+    s_volPct = pct;
+}
+int audioGetVolume(void) { return s_volPct; }

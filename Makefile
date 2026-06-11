@@ -25,8 +25,10 @@ GRAPHICS	:=	gfx
 GFXBUILD	:=	$(BUILD)
 #ROMFS		:=	romfs
 
-# Si existe icon.png en la raiz, se usa como icono; si no, el icono por defecto.
-ifneq ("$(wildcard $(TOPDIR)/icon.png)","")
+# Icono embebido en el .3dsx (Homebrew Launcher). Usa meta/icon.png si existe.
+ifneq ("$(wildcard $(TOPDIR)/meta/icon.png)","")
+	ICON := meta/icon.png
+else ifneq ("$(wildcard $(TOPDIR)/icon.png)","")
 	ICON := icon.png
 endif
 
@@ -137,23 +139,11 @@ ifneq ($(ROMFS),)
 	export _3DSXFLAGS += --romfs=$(CURDIR)/$(ROMFS)
 endif
 
-.PHONY: all clean cia
+.PHONY: all clean
 
 #---------------------------------------------------------------------------------
 all: $(BUILD) $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES) $(T3XHFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-
-#---------------------------------------------------------------------------------
-# Empaqueta un .cia instalable (requiere tools/bannertool y tools/makerom)
-#---------------------------------------------------------------------------------
-cia: all
-	@echo "generando SMDH ..."
-	@tools/bannertool makesmdh -s "$(APP_TITLE)" -l "$(APP_DESCRIPTION)" -p "$(APP_AUTHOR)" -i meta/icon.png -o $(TARGET)_cia.smdh
-	@echo "generando banner ..."
-	@tools/bannertool makebanner -i meta/banner.png -a meta/banner.wav -o $(TARGET).bnr
-	@echo "generando $(TARGET).cia ..."
-	@tools/makerom -f cia -o $(TARGET).cia -elf $(TARGET).elf -rsf meta/app.rsf -icon $(TARGET)_cia.smdh -banner $(TARGET).bnr -exefslogo -target t
-	@echo "built ... $(TARGET).cia"
 
 $(BUILD):
 	@mkdir -p $@
@@ -171,7 +161,7 @@ endif
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf $(GFXBUILD) $(TARGET).cia
+	@rm -fr $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf $(GFXBUILD)
 
 #---------------------------------------------------------------------------------
 $(GFXBUILD)/%.t3x	$(BUILD)/%.h	:	%.t3s
