@@ -1,5 +1,9 @@
 # PandaFlow — Reproductor de música para 3DS
 
+[![build](https://github.com/PandaAkiraNakai/PandaFlow/actions/workflows/build.yml/badge.svg)](https://github.com/PandaAkiraNakai/PandaFlow/actions/workflows/build.yml)
+![platform](https://img.shields.io/badge/platform-Nintendo%203DS-D12228)
+![license](https://img.shields.io/badge/license-GPLv2-blue)
+
 Reproductor de música homebrew para Nintendo 3DS/2DS que **sigue sonando con la
 tapa cerrada** (igual que la app oficial "Nintendo 3DS Sound").
 
