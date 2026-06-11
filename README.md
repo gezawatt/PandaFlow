@@ -7,6 +7,10 @@
 Reproductor de música homebrew para Nintendo 3DS/2DS que **sigue sonando con la
 tapa cerrada** (igual que la app oficial "Nintendo 3DS Sound").
 
+<!-- profile-excerpt -->
+**Reproductor de música homebrew para Nintendo 3DS** que **sigue sonando con la tapa cerrada** (como la app oficial de Sonido). Escrito en **C** con **devkitPro / libctru + citro2d**: audio por streaming **NDSP** desde un hilo dedicado, **MP3/FLAC/WAV** (dr_libs) y **AAC** (faad2 + minimp4), biblioteca recursiva por **álbumes** con **carátulas** (stb_image → textura GPU), **letras** `.lrc` sincronizadas / `.txt`, **shuffle/repeat** y controles táctiles. UI estilo *Mixtape* con disco de vinilo. Compila a `.3dsx` y `.cia`, con CI en GitHub Actions.
+<!-- /profile-excerpt -->
+
 ## Característica clave: tapa cerrada
 
 Al iniciar la reproducción se llama a `aptSetSleepAllowed(false)`, lo que impide
