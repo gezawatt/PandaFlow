@@ -188,7 +188,7 @@ static void renderTop(int playing,AudioState st,uint64_t cur,uint64_t total,uint
     if(lyricsAvailable()) txtSh(16,162,0.3f,0.4f,C_PINK,"SEL: lyrics");
     C2D_DrawRectSolid(10,198,0.28f,182,34,C_PANEL);
     txt(16,200,0.3f,0.4f,C_CREAM,"A play   Y pause  X stop");
-    txt(16,216,0.3f,0.4f,C_CREAM,"B back   C-stick vol");
+    txt(16,216,0.3f,0.4f,C_CREAM,"B back   L/R volume");
 
     // volume indicator (bottom-right corner)
     char vbuf[16]; int vol=audioGetVolume();
@@ -324,7 +324,7 @@ int main(int argc,char** argv){
     C3D_RenderTarget* bot=C2D_CreateScreenTarget(GFX_BOTTOM,GFX_LEFT);
     g_text=C2D_TextBufNew(8192);
 
-    irrstInit();   // C-stick (New 3DS) para el volumen
+    irrstInit();   // Optional C-stick volume control on New 3DS
 
     bool audioOk=audioInit();
     int found=playlistScan(MUSIC_DIR);
@@ -406,7 +406,10 @@ int main(int argc,char** argv){
         if(kDown&KEY_Y) audioTogglePause();
         if(kDown&KEY_X){ audioStop(); playing=-1; }
 
-        // ---- volumen con el C-stick (New 3DS): arriba sube, abajo baja ----
+        if(kDown&KEY_R) audioSetVolume(audioGetVolume()+5);
+        else if(kDown&KEY_L) audioSetVolume(audioGetVolume()-5);
+
+        // Optional volume control with the New 3DS C-stick.
         irrstScanInput();
         circlePosition cs; hidCstickRead(&cs);
         if(cs.dy>40 || cs.dy<-40){

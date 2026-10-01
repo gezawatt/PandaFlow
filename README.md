@@ -92,7 +92,8 @@ sdmc:/music/
 | A | Open album / play track |
 | B | Return to the album list |
 | SELECT | Show / hide lyrics |
-| **C-stick ↑/↓** | **Raise / lower volume** (New 3DS) |
+| **R / L** | **Raise / lower volume** (5% per press; all 3DS models) |
+| **C-stick ↑/↓** | **Raise / lower volume** (optional, New 3DS) |
 | Touch bar | ⏮ ▶/II ⏭ ■ SHUF RPT |
 | START | Exit |
 
