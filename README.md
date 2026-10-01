@@ -107,13 +107,13 @@ You need a console with CFW (Luma3DS) and the Homebrew Launcher.
 2. Search for **PandaFlow** and install it.
 
 Universal Updater downloads the `.3dsx` from the
-[Releases](https://github.com/PandaAkiraNakai/PandaFlow/releases) and places it in
+[Releases](https://github.com/gezawatt/PandaFlow/releases) and places it in
 `sdmc:/3ds/PandaFlow/`. Then open it from the **Homebrew Launcher**.
 
 ### Manual
 
 1. Download `pandaflow.3dsx` from the latest
-   [release](https://github.com/PandaAkiraNakai/PandaFlow/releases/latest).
+   [release](https://github.com/gezawatt/PandaFlow/releases/latest).
 2. Copy it to `sdmc:/3ds/` on the microSD.
 3. Open it from the **Homebrew Launcher**.
 
