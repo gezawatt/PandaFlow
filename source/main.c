@@ -39,6 +39,7 @@ typedef enum { REPEAT_OFF=0, REPEAT_ALL, REPEAT_ONE } RepeatMode;
 
 static C2D_TextBuf g_text;
 static float g_reelAng = 0.0f;
+static bool g_volumeButtonsLocked = false;
 
 // ---- layout pantalla inferior ----
 #define LIST_TOP 24
@@ -188,7 +189,8 @@ static void renderTop(int playing,AudioState st,uint64_t cur,uint64_t total,uint
     if(lyricsAvailable()) txtSh(16,162,0.3f,0.4f,C_PINK,"SEL: lyrics");
     C2D_DrawRectSolid(10,198,0.28f,182,34,C_PANEL);
     txt(16,200,0.3f,0.4f,C_CREAM,"A play   Y pause  X stop");
-    txt(16,216,0.3f,0.4f,C_CREAM,"B back   L/R volume");
+    txt(16,216,0.3f,0.4f,C_CREAM,
+        g_volumeButtonsLocked?"B back   L/R locked":"B back   L/R volume");
 
     // volume indicator (bottom-right corner)
     char vbuf[16]; int vol=audioGetVolume();
@@ -226,10 +228,19 @@ static void renderTransport(AudioState st,bool sh,RepeatMode rp){
     }
 }
 
+static void renderVolumeButtonLock(void){
+    u32 bg=g_volumeButtonsLocked?C_PINK:C_INK2;
+    C2D_DrawRectSolid(BOT_W-82,2,0.15f,74,16,bg);
+    txtCtr(BOT_W-45,5,0.2f,0.38f,
+           g_volumeButtonsLocked?C_INK:C_CYAN,
+           g_volumeButtonsLocked?"L/R LOCK":"L/R VOL");
+}
+
 // ===================== LISTA: ÁLBUMES =====================
 static void renderAlbums(int sel,int scroll,int playing){
     C2D_DrawRectSolid(0,0,0.1f,BOT_W,20,C_HDR);
     C2D_DrawRectSolid(0,20,0.1f,BOT_W,2,C_PINK);
+    renderVolumeButtonLock();
     char h[64]; snprintf(h,sizeof h,"ALBUMS (%d)",albumCount());
     txt(8,4,0.2f,0.5f,C_CYAN,h);
 
@@ -265,8 +276,9 @@ static void renderTracks(int alb,int sel,int scroll,int playing){
     const Album* al=albumGet(alb);
     C2D_DrawRectSolid(0,0,0.1f,BOT_W,20,C_HDR);
     C2D_DrawRectSolid(0,20,0.1f,BOT_W,2,C_CYAN);
+    renderVolumeButtonLock();
     icoPrev(12,10,5,C_PINK);                            // flecha atras (tap)
-    char tmp[256]; clip(tmp,sizeof tmp,al?al->name:"",40); txt(24,4,0.2f,0.45f,C_CYAN,tmp);
+    char tmp[256]; clip(tmp,sizeof tmp,al?al->name:"",22); txt(24,4,0.2f,0.45f,C_CYAN,tmp);
     if(!al) return;
 
     int first=al->firstTrack, n=al->count;
@@ -290,8 +302,9 @@ static void renderTracks(int alb,int sel,int scroll,int playing){
 static void renderLyrics(uint32_t curMs,int manual){
     C2D_DrawRectSolid(0,0,0.1f,BOT_W,20,C_HDR);
     C2D_DrawRectSolid(0,20,0.1f,BOT_W,2,C_CYAN);
+    renderVolumeButtonLock();
     txt(8,4,0.2f,0.5f,C_PINK,"LYRICS");
-    txtRight(BOT_W-8,5,0.2f,0.4f,C_CREAM,lyricsSynced()?"synced":"text");
+    txtRight(BOT_W-94,5,0.2f,0.4f,C_CREAM,lyricsSynced()?"synced":"text");
     const int LH=16, top=26, vis=(BAR_Y-top)/LH;
     if(!lyricsAvailable()){
         txt(10,64,0.2f,0.46f,C_YELLOW,"No lyrics for this song.");
@@ -347,7 +360,9 @@ int main(int argc,char** argv){
         // ---------- toques ----------
         if(kDown & KEY_TOUCH){
             touchPosition tp; hidTouchRead(&tp);
-            if(tp.py>=BAR_Y){                                   // barra de transporte
+            if(tp.py<20 && tp.px>=BOT_W-82){
+                g_volumeButtonsLocked=!g_volumeButtonsLocked;
+            } else if(tp.py>=BAR_Y){                            // barra de transporte
                 int b=tp.px/BTN_W; if(b>=NBTN)b=NBTN-1;
                 switch(b){
                     case 0: if(playing>=0){int p=manualPrev(playing,found,shuffle); if(p>=0&&startTrack(p))playing=p;} break;
@@ -406,8 +421,10 @@ int main(int argc,char** argv){
         if(kDown&KEY_Y) audioTogglePause();
         if(kDown&KEY_X){ audioStop(); playing=-1; }
 
-        if(kDown&KEY_R) audioSetVolume(audioGetVolume()+5);
-        else if(kDown&KEY_L) audioSetVolume(audioGetVolume()-5);
+        if(!g_volumeButtonsLocked){
+            if(kDown&KEY_R) audioSetVolume(audioGetVolume()+5);
+            else if(kDown&KEY_L) audioSetVolume(audioGetVolume()-5);
+        }
 
         // Optional volume control with the New 3DS C-stick.
         irrstScanInput();
