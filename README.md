@@ -1,10 +1,9 @@
 # PandaFlow — Music player for 3DS
-
-*This app is an English translation of the music player by PandaAkiraNakai*
-
 [![build](https://github.com/PandaAkiraNakai/PandaFlow/actions/workflows/build.yml/badge.svg)](https://github.com/PandaAkiraNakai/PandaFlow/actions/workflows/build.yml)
 ![platform](https://img.shields.io/badge/platform-Nintendo%203DS-D12228)
 ![license](https://img.shields.io/badge/license-GPLv2-blue)
+
+*This app is an English translation of the music player by PandaAkiraNakai*
 
 Homebrew music player for Nintendo 3DS/2DS that **keeps playing with the lid closed**
 (just like the official "Nintendo 3DS Sound" app).
