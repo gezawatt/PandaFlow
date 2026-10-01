@@ -10,10 +10,10 @@ TOPDIR ?= $(CURDIR)
 include $(DEVKITARM)/3ds_rules
 
 #---------------------------------------------------------------------------------
-# Metadatos de la app (van al SMDH / banner)
+# App metadata (used by the SMDH / banner)
 #---------------------------------------------------------------------------------
 APP_TITLE       := PandaFlow
-APP_DESCRIPTION := Reproductor de musica (suena con la tapa cerrada)
+APP_DESCRIPTION := Music player (plays with the lid closed)
 APP_AUTHOR      := sergioc
 
 TARGET		:=	pandaflow

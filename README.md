@@ -1,166 +1,173 @@
-# PandaFlow — Reproductor de música para 3DS
+# PandaFlow — Music player for 3DS
+
+*This app is an English translation of the music player by PandaAkiraNakai*
 
 [![build](https://github.com/PandaAkiraNakai/PandaFlow/actions/workflows/build.yml/badge.svg)](https://github.com/PandaAkiraNakai/PandaFlow/actions/workflows/build.yml)
 ![platform](https://img.shields.io/badge/platform-Nintendo%203DS-D12228)
 ![license](https://img.shields.io/badge/license-GPLv2-blue)
 
-Reproductor de música homebrew para Nintendo 3DS/2DS que **sigue sonando con la
-tapa cerrada** (igual que la app oficial "Nintendo 3DS Sound").
+Homebrew music player for Nintendo 3DS/2DS that **keeps playing with the lid closed**
+(just like the official "Nintendo 3DS Sound" app).
 
 <!-- profile-excerpt -->
-**Reproductor de música homebrew para Nintendo 3DS** que **sigue sonando con la tapa cerrada** (como la app oficial de Sonido). Escrito en **C** con **devkitPro / libctru + citro2d**: audio por streaming **NDSP** desde un hilo dedicado, **MP3/FLAC/WAV** (dr_libs) y **AAC** (faad2 + minimp4), biblioteca recursiva por **álbumes** con **carátulas** (stb_image → textura GPU), **letras** `.lrc` sincronizadas / `.txt`, **shuffle/repeat** y controles táctiles. UI estilo *Mixtape* con disco de vinilo. Compila a `.3dsx` (Homebrew Launcher), con CI en GitHub Actions y distribución por **Universal Updater**.
+**Homebrew music player for Nintendo 3DS** that **keeps playing with the lid closed**
+(like the official Sound app). Written in **C** with **devkitPro / libctru + citro2d**:
+streaming audio with **NDSP** on a dedicated thread, **MP3/FLAC/WAV** support via
+**dr_libs**, **AAC** via **faad2 + minimp4**, recursive album library with covers
+(**stb_image** to GPU texture), synced `.lrc` / `.txt` lyrics, **shuffle/repeat** and
+multi-touch controls. UI styled like *Mixtape* with a vinyl record. Builds to a `.3dsx`
+(Homebrew Launcher) file, with CI via GitHub Actions and distribution through
+**Universal Updater**.
 <!-- /profile-excerpt -->
 
-## Característica clave: tapa cerrada
+## Key feature: lid-closed playback
 
-Al iniciar la reproducción se llama a `aptSetSleepAllowed(false)`, lo que impide
-que la consola entre en suspensión al cerrar la tapa: la pantalla se apaga pero
-la CPU y el audio siguen corriendo. Al pausar/detener/salir se restaura con
-`aptSetSleepAllowed(true)` para no gastar batería. El audio se alimenta desde un
-**hilo dedicado** (`source/audio.c`), independiente del render, así que no se
-corta aunque la pantalla esté apagada.
+When playback starts, `aptSetSleepAllowed(false)` is called to prevent the console
+from entering sleep mode when the lid is closed: the screen turns off, but the CPU and
+audio continue running. When paused/stopped/exiting, it restores `aptSetSleepAllowed(true)`
+to save battery. Audio is fed from a **dedicated thread** (`source/audio.c`),
+independent from rendering, so playback does not cut out even when the screen is off.
 
-## Formatos soportados
+## Supported formats
 
-- **MP3, FLAC, WAV** vía [dr_libs](https://github.com/mackron/dr_libs)
-  (single-header, dominio público) — ver `include/dr_*.h`.
-- **AAC** (`.m4a` / `.mp4` / `.aac`) vía **faad2** + **minimp4** (demux MP4) —
-  ver `source/aac.c`. `lib/libfaad.a` es faad2 cross-compilado para 3DS.
-- Cualquier número de canales se convierte a estéreo en `source/decoder.c`.
+- **MP3, FLAC, WAV** via [dr_libs](https://github.com/mackron/dr_libs)
+  (single-header, public domain) — see `include/dr_*.h`.
+- **AAC** (`.m4a` / `.mp4` / `.aac`) via **faad2** + **minimp4** (MP4 demux) —
+  see `source/aac.c`. `lib/libfaad.a` is the cross-compiled faad2 for 3DS.
+- Any number of channels is converted to stereo in `source/decoder.c`.
 
-## Letras (lyrics)
+## Lyrics
 
-Pon junto al audio un archivo con el **mismo nombre**:
-- `cancion.lrc` → letras **sincronizadas** (auto-scroll, línea actual resaltada).
-- `cancion.txt` → texto plano (desplazable con la cruceta).
+Place a file next to the audio with the **same name**:
+- `song.lrc` → **synced lyrics** (auto-scroll, current line highlighted).
+- `song.txt` → plain text (scrollable with the D-pad).
 
-Pulsa **SELECT** para mostrar/ocultar las letras (pantalla inferior).
-Ver `source/lyrics.c`.
+Press **SELECT** to show/hide the lyrics (lower screen).
+See `source/lyrics.c`.
 
-## Biblioteca (subcarpetas / álbumes)
+## Library (subfolders / albums)
 
-Escanea `sdmc:/music` de forma **recursiva**: cada subcarpeta con audio se trata
-como un **álbum**. Estructura típica soportada:
+It scans `sdmc:/music` **recursively**: each subfolder containing audio is treated as
+an **album**. A typical supported structure looks like:
 
 ```
 sdmc:/music/
   Circles (Deluxe) - Mac Miller/
     01 - Mac Miller - Circles.flac
-    01 - Mac Miller - Circles.lrc      (letras)
-    cover.jpg                          (carátula del álbum)
+    01 - Mac Miller - Circles.lrc      (lyrics)
+    cover.jpg                          (album art)
     ...
 ```
 
-- **Carátula**: `cover.jpg` / `cover.png` / `folder.jpg` en la carpeta del álbum
-  (se muestra en "ahora suena"). Decodificada con stb_image → `source/cover.c`.
-- **Metadatos**: el Nº de pista, artista y título se derivan del nombre de archivo
-  (`NN - Artista - Título`). La lista agrupa por álbum con encabezados.
+- **Cover art**: `cover.jpg` / `cover.png` / `folder.jpg` in the album folder
+  (shown in "now playing"). Decoded with stb_image → `source/cover.c`.
+- **Metadata**: track number, artist, and title are derived from the filename
+  (`NN - Artist - Title`). The list groups by album with headers.
 
-## Navegación (pantalla inferior)
+## Navigation (lower screen)
 
-- **Vista de álbumes** (carpetas) → entra a un álbum con **A** o tocándolo.
-- **Vista de tracks** del álbum → **A**/toque reproduce; **B** o ◀ (toque) vuelve.
-- **Barra de transporte táctil** abajo: ⏮ · ▶/II · ⏭ · ■ · **SHUF** · **RPT**.
-- **Shuffle** y **Repeat** (off / todo `*` / una `1`).
+- **Album view** (folders) → enter an album with **A** or by tapping it.
+- **Track list view** → **A**/tap plays; **B** or ◀ (tap) goes back.
+- **Touch transport bar** at the bottom: ⏮ · ▶/II · ⏭ · ■ · **SHUF** · **RPT**.
+- **Shuffle** and **Repeat** (off / all `*` / one `1`).
 
-> [!note] Audio fluido
-> En New 3DS se llama `osSetSpeedupEnable(true)` (804 MHz + L2): sin eso, FLAC/AAC
-> se escucha **cortado / con pops** por falta de CPU.
+> [!note] Smooth audio
+> On New 3DS, `osSetSpeedupEnable(true)` is called (804 MHz + L2): without it,
+> FLAC/AAC can sound **choppy / poppy** due to CPU limits.
 
-## Uso
+## Usage
 
-1. Crea `sdmc:/music` y mete carpetas de álbumes (o sueltos).
-2. Abre PandaFlow. Tracklist abajo (con álbumes), "ahora suena" + carátula arriba.
+1. Create `sdmc:/music` and place album folders (or loose files).
+2. Open PandaFlow. The tracklist is shown below (with albums), while the current song and cover appear above.
 
-### Controles
+### Controls
 
-| Botón | Acción |
+| Button | Action |
 |---|---|
-| D-Pad ↑/↓ | Mover cursor en la lista |
-| D-Pad ←/→ | Página anterior / siguiente |
-| A | Reproducir la canción seleccionada |
-| Y | Pausa / reanudar |
-| X | Detener |
-| A | Entrar al álbum / reproducir track |
-| B | Volver a la lista de álbumes |
-| SELECT | Mostrar / ocultar letras |
-| **C-stick ↑/↓** | **Subir / bajar volumen** (New 3DS) |
-| Barra táctil | ⏮ ▶/II ⏭ ■ SHUF RPT |
-| START | Salir |
+| D-Pad ↑/↓ | Move cursor in the list |
+| D-Pad ←/→ | Previous / next page |
+| A | Play the selected song |
+| Y | Pause / resume |
+| X | Stop |
+| A | Open album / play track |
+| B | Return to the album list |
+| SELECT | Show / hide lyrics |
+| **C-stick ↑/↓** | **Raise / lower volume** (New 3DS) |
+| Touch bar | ⏮ ▶/II ⏭ ■ SHUF RPT |
+| START | Exit |
 
-## Instalación
+## Installation
 
-PandaFlow se distribuye como **`.3dsx`** (homebrew para el Homebrew Launcher), no
-como `.cia`. Necesitas una consola con CFW (Luma3DS) y el Homebrew Launcher.
+PandaFlow is distributed as a **`.3dsx`** file (homebrew for the Homebrew Launcher), not as a `.cia`.
+You need a console with CFW (Luma3DS) and the Homebrew Launcher.
 
-### Universal Updater (recomendado)
+### Universal Updater (recommended)
 
-1. Abre **Universal Updater** en tu 3DS.
-2. Busca **PandaFlow** e instálalo.
+1. Open **Universal Updater** on your 3DS.
+2. Search for **PandaFlow** and install it.
 
-Universal Updater descarga el `.3dsx` desde las
-[Releases](https://github.com/PandaAkiraNakai/PandaFlow/releases) y lo deja en
-`sdmc:/3ds/PandaFlow/`. Luego ábrelo desde el **Homebrew Launcher**.
+Universal Updater downloads the `.3dsx` from the
+[Releases](https://github.com/PandaAkiraNakai/PandaFlow/releases) and places it in
+`sdmc:/3ds/PandaFlow/`. Then open it from the **Homebrew Launcher**.
 
 ### Manual
 
-1. Descarga `pandaflow.3dsx` de la última
+1. Download `pandaflow.3dsx` from the latest
    [release](https://github.com/PandaAkiraNakai/PandaFlow/releases/latest).
-2. Cópialo a `sdmc:/3ds/` en la microSD.
-3. Ábrelo desde el **Homebrew Launcher**.
+2. Copy it to `sdmc:/3ds/` on the microSD.
+3. Open it from the **Homebrew Launcher**.
 
-> **Nota:** FBI no sirve para esto — instala `.cia` (títulos del menú HOME), no
-> `.3dsx`. Para homebrew `.3dsx` el camino es Universal Updater o la copia manual.
+> **Note:** FBI does not help here — it installs `.cia` packages (HOME menu titles), not
+> `.3dsx`. For homebrew `.3dsx`, use Universal Updater or manual copying.
 
-## Compilar
+## Build
 
-Requiere [devkitPro](https://devkitpro.org) con el grupo `3ds-dev`
+Requires [devkitPro](https://devkitpro.org) with the `3ds-dev` group
 (devkitARM + libctru + citro2d).
 
 ```sh
-source /etc/profile.d/devkit-env.sh   # define DEVKITPRO / DEVKITARM
+source /etc/profile.d/devkit-env.sh   # defines DEVKITPRO / DEVKITARM
 
-# Dependencia que no se versiona (se reconstruye):
-./scripts/build-faad2.sh   # cross-compila faad2 -> lib/libfaad.a + include/neaacdec.h
+# Unversioned dependency that must be rebuilt:
+./scripts/build-faad2.sh   # cross-compiles faad2 -> lib/libfaad.a + include/neaacdec.h
 
-make          # genera pandaflow.3dsx (Homebrew Launcher)
+make          # produces pandaflow.3dsx (Homebrew Launcher)
 make clean
 ```
 
-El `.3dsx` embebe el icono de `meta/icon.png` (Homebrew Launcher).
+The `.3dsx` embeds the icon from `meta/icon.png` (Homebrew Launcher).
 
-## Estructura
+## Structure
 
 ```
 source/
-  main.c       UI (citro2d), casete/carátula, shuffle/repeat, control
-  audio.c      motor NDSP, hilo de audio, lógica de "tapa cerrada"
-  decoder.c    abstracción de formatos -> estéreo PCM16
-  aac.c        AAC (.m4a/.aac) con faad2 + minimp4
-  lyrics.c     letras .lrc (sincronizadas) / .txt
-  cover.c      carátulas: stb_image -> textura GPU (C3D_Tex)
-  playlist.c   escaneo RECURSIVO de sdmc:/music (álbumes)
-  dr_impl.c    implementaciones de dr_libs (TU única)
-include/       headers propios + dr_*.h, minimp4.h, neaacdec.h, stb_image.h
-lib/           libfaad.a (se genera con scripts/build-faad2.sh)
-meta/          icon.png (icono del .3dsx / Universal-DB)
+  main.c       UI (citro2d), cassette / cover, shuffle/repeat, controls
+  audio.c      NDSP engine, audio thread, "lid closed" logic
+  decoder.c    format abstraction -> stereo PCM16
+  aac.c        AAC (.m4a/.aac) via faad2 + minimp4
+  lyrics.c     .lrc (synced) / .txt lyrics
+  cover.c      covers: stb_image -> GPU texture (C3D_Tex)
+  playlist.c   recursive scan of sdmc:/music (albums)
+  dr_impl.c    dr_libs implementations (single file)
+include/       project headers + dr_*.h, minimp4.h, neaacdec.h, stb_image.h
+lib/           libfaad.a (built by scripts/build-faad2.sh)
+meta/          icon.png (icon for .3dsx / Universal-DB)
 scripts/       build-faad2.sh
 ```
 
-## Créditos y licencia
+## Credits and license
 
-Hecho con [devkitPro](https://devkitpro.org) (libctru, citro2d). Componentes de
-terceros incluidos:
+Built with [devkitPro](https://devkitpro.org) (libctru, citro2d). Third-party components included:
 
-| Componente | Uso | Licencia |
+| Component | Use | License |
 |---|---|---|
-| [dr_libs](https://github.com/mackron/dr_libs) | MP3/FLAC/WAV | dominio público / MIT-0 |
-| [minimp4](https://github.com/lieff/minimp4) | demux MP4/M4A | CC0 / dominio público |
-| [faad2](https://github.com/knik0/faad2) | decodificación AAC | **GPLv2** |
-| [stb_image](https://github.com/nothings/stb) | carátulas JPG/PNG | dominio público / MIT |
+| [dr_libs](https://github.com/mackron/dr_libs) | MP3/FLAC/WAV | public domain / MIT-0 |
+| [minimp4](https://github.com/lieff/minimp4) | MP4/M4A demux | CC0 / public domain |
+| [faad2](https://github.com/knik0/faad2) | AAC decoding | **GPLv2** |
+| [stb_image](https://github.com/nothings/stb) | JPG/PNG cover art | public domain / MIT |
 
-Como el binario enlaza **faad2 (GPLv2)**, **PandaFlow se distribuye bajo
-GPLv2** (ver [`LICENSE`](LICENSE)).
+Because the binary links **faad2 (GPLv2)**, **PandaFlow is distributed under GPLv2**
+(see [`LICENSE`](LICENSE)).
 
-> Inspiración visual: estética del juego *Mixtape* (Beethoven & Dinosaur /
-> Annapurna). Proyecto sin relación oficial con ellos.
+> Visual inspiration: the aesthetic of *Mixtape* (Beethoven & Dinosaur / Annapurna).
+> This project is not officially affiliated with them.

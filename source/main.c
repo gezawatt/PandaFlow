@@ -172,7 +172,7 @@ static void renderTop(int playing,AudioState st,uint64_t cur,uint64_t total,uint
         if(t->artist[0]){clip(tmp,sizeof tmp,t->artist,30); txt(ix,68,0.3f,0.46f,C_PINK,tmp);}
         const Album* al=albumGet(t->album);
         if(al){clip(tmp,sizeof tmp,al->name,32); txt(ix,86,0.3f,0.42f,C_DIM,tmp);}
-    } else txt(ix,60,0.3f,0.5f,C_DIM,"-- elige una cinta --");
+    } else txt(ix,60,0.3f,0.5f,C_DIM,"-- choose a tape --");
 
     char tc[16],tt[16]; fmtTime(tc,sizeof tc,cur,rate); fmtTime(tt,sizeof tt,total,rate);
     float barX=ix+18,barY=150,barW=TOP_W-10-barX-18,barH=7;
@@ -182,16 +182,15 @@ static void renderTop(int playing,AudioState st,uint64_t cur,uint64_t total,uint
     reel(ix+8,barY+barH/2,8,g_reelAng); reel(TOP_W-18,barY+barH/2,8,g_reelAng);
 
     if(st==AUDIO_PLAYING){ icoPlay(ix+5,178,5,C_YELLOW); txt(ix+16,172,0.3f,0.46f,C_YELLOW,"PLAY"); }
-    else if(st==AUDIO_PAUSED){ icoPause(ix+5,178,5,C_YELLOW); txt(ix+16,172,0.3f,0.46f,C_YELLOW,"PAUSA"); }
+    else if(st==AUDIO_PAUSED){ icoPause(ix+5,178,5,C_YELLOW); txt(ix+16,172,0.3f,0.46f,C_YELLOW,"PAUSE"); }
     else { icoStop(ix+5,178,4,C_DIM); txt(ix+16,172,0.3f,0.46f,C_DIM,"STOP"); }
-    if(audioKeepingAwake()) txt(ix+90,174,0.3f,0.4f,C_CYAN,"tapa: sigue sonando");
-    if(lyricsAvailable()) txtSh(16,162,0.3f,0.4f,C_PINK,"SEL: letras");
-    // tira-etiqueta para la ayuda: en C_DIM2 sobre el rojo del degradado no se leia
+    if(audioKeepingAwake()) txt(ix+90,174,0.3f,0.4f,C_CYAN,"lid: still playing");
+    if(lyricsAvailable()) txtSh(16,162,0.3f,0.4f,C_PINK,"SEL: lyrics");
     C2D_DrawRectSolid(10,198,0.28f,182,34,C_PANEL);
-    txt(16,200,0.3f,0.4f,C_CREAM,"A play  Y pausa  X stop");
-    txt(16,216,0.3f,0.4f,C_CREAM,"B atras   C-stick vol");
+    txt(16,200,0.3f,0.4f,C_CREAM,"A play   Y pause  X stop");
+    txt(16,216,0.3f,0.4f,C_CREAM,"B back   C-stick vol");
 
-    // indicador de volumen (esquina inf. derecha)
+    // volume indicator (bottom-right corner)
     char vbuf[16]; int vol=audioGetVolume();
     snprintf(vbuf,sizeof vbuf,"VOL %d%%",vol);
     txtRight(TOP_W-10,196,0.3f,0.4f,C_CYAN,vbuf);
@@ -231,14 +230,14 @@ static void renderTransport(AudioState st,bool sh,RepeatMode rp){
 static void renderAlbums(int sel,int scroll,int playing){
     C2D_DrawRectSolid(0,0,0.1f,BOT_W,20,C_HDR);
     C2D_DrawRectSolid(0,20,0.1f,BOT_W,2,C_PINK);
-    char h[64]; snprintf(h,sizeof h,"ALBUMES (%d)",albumCount());
+    char h[64]; snprintf(h,sizeof h,"ALBUMS (%d)",albumCount());
     txt(8,4,0.2f,0.5f,C_CYAN,h);
 
     int playAlbum = (playing>=0 && playlistGet(playing)) ? playlistGet(playing)->album : -1;
     int n=albumCount(); char tmp[256],line[300];
     if(n<=0){
-        txt(10,70,0.2f,0.5f,C_YELLOW,"No hay musica.");
-        txt(10,92,0.2f,0.42f,C_CREAM,"Pon carpetas de albumes en");
+        txt(10,70,0.2f,0.5f,C_YELLOW,"No music found.");
+        txt(10,92,0.2f,0.42f,C_CREAM,"Put album folders in");
         txt(10,108,0.2f,0.42f,C_CREAM,"sdmc:/music (mp3/flac/wav/m4a)");
         return;
     }
@@ -291,13 +290,13 @@ static void renderTracks(int alb,int sel,int scroll,int playing){
 static void renderLyrics(uint32_t curMs,int manual){
     C2D_DrawRectSolid(0,0,0.1f,BOT_W,20,C_HDR);
     C2D_DrawRectSolid(0,20,0.1f,BOT_W,2,C_CYAN);
-    txt(8,4,0.2f,0.5f,C_PINK,"LETRAS");
-    txtRight(BOT_W-8,5,0.2f,0.4f,C_CREAM,lyricsSynced()?"sincronizadas":"texto");
+    txt(8,4,0.2f,0.5f,C_PINK,"LYRICS");
+    txtRight(BOT_W-8,5,0.2f,0.4f,C_CREAM,lyricsSynced()?"synced":"text");
     const int LH=16, top=26, vis=(BAR_Y-top)/LH;
     if(!lyricsAvailable()){
-        txt(10,64,0.2f,0.46f,C_YELLOW,"Sin letras para esta cancion.");
-        txt(10,88,0.2f,0.42f,C_CREAM,"Pon junto al audio un archivo");
-        txt(10,104,0.2f,0.42f,C_CREAM,"<mismo nombre>.lrc  o  .txt");
+        txt(10,64,0.2f,0.46f,C_YELLOW,"No lyrics for this song.");
+        txt(10,88,0.2f,0.42f,C_CREAM,"Place a file next to the audio");
+        txt(10,104,0.2f,0.42f,C_CREAM,"<same name>.lrc  or  .txt");
         return;
     }
     int n=lyricsCount(), active=lyricsSynced()?lyricsActiveIndex(curMs):-1;
