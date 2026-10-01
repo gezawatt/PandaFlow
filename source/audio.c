@@ -25,7 +25,7 @@ static volatile bool s_awake     = false;   // estamos impidiendo suspension
 
 static LightEvent    s_wake;                 // despierta al hilo cuando hay trabajo
 
-static volatile int  s_volPct = 150;         // ganancia de salida (%) — 100 = nativo
+static volatile int  s_volPct = 100;         // ganancia de salida (%) — 100 = nativo
 
 static inline int16_t* bufPtr(int i) {
     return s_buf + (size_t)i * FRAMES_PER_BUF * CHANNELS_OUT;
